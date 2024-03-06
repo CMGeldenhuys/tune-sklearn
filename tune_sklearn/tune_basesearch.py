@@ -321,6 +321,7 @@ class TuneBaseSearchCV(BaseSearchCV):
                  estimator,
                  early_stopping=None,
                  scoring=None,
+                 scoring_objective=None,
                  n_jobs=None,
                  cv=5,
                  refit=True,
@@ -378,7 +379,9 @@ class TuneBaseSearchCV(BaseSearchCV):
             _, self._is_multi = _check_multimetric_scoring(
                 self.estimator, self.scoring)
 
-        if self._is_multi:
+        if scoring_objective:
+            self._base_metric_name = scoring_objective
+        elif self._is_multi and self.refit:
             self._base_metric_name = self.refit
         else:
             self._base_metric_name = "score"

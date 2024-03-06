@@ -151,6 +151,7 @@ class TuneGridSearchCV(TuneBaseSearchCV):
                  param_grid,
                  early_stopping=None,
                  scoring=None,
+                 scoring_objective=None,
                  n_jobs=None,
                  cv=5,
                  refit=True,
@@ -175,6 +176,7 @@ class TuneGridSearchCV(TuneBaseSearchCV):
             estimator=estimator,
             early_stopping=early_stopping,
             scoring=scoring,
+            scoring_objective=scoring_objective,
             n_jobs=n_jobs or -1,
             cv=cv,
             refit=refit,
@@ -189,7 +191,8 @@ class TuneGridSearchCV(TuneBaseSearchCV):
             pipeline_auto_early_stop=pipeline_auto_early_stop,
             stopper=stopper,
             time_budget_s=time_budget_s,
-            mode=mode)
+            mode=mode,
+            )
 
         check_error_warm_start(self.early_stop_type, param_grid, estimator)
 
