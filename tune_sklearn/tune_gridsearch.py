@@ -166,6 +166,7 @@ class TuneGridSearchCV(TuneBaseSearchCV):
                  pipeline_auto_early_stop=True,
                  stopper=None,
                  time_budget_s=None,
+                 resources_per_trial=None, 
                  sk_n_jobs=None,
                  mode=None):
         if sk_n_jobs not in (None, 1):
@@ -191,6 +192,7 @@ class TuneGridSearchCV(TuneBaseSearchCV):
             pipeline_auto_early_stop=pipeline_auto_early_stop,
             stopper=stopper,
             time_budget_s=time_budget_s,
+            resources_per_trial= resources_per_trial, 
             mode=mode,
             )
 

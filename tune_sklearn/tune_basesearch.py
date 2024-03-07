@@ -336,6 +336,7 @@ class TuneBaseSearchCV(BaseSearchCV):
                  pipeline_auto_early_stop=True,
                  stopper=None,
                  time_budget_s=None,
+                 resources_per_trial=None, 
                  mode=None):
         if max_iters < 1:
             raise ValueError("max_iters must be greater than or equal to 1.")
@@ -404,6 +405,7 @@ class TuneBaseSearchCV(BaseSearchCV):
         self.name = name
         self.use_gpu = use_gpu
         self.loggers = loggers
+        self.resources_per_trial = resources_per_trial  
         assert isinstance(self.n_jobs, int)
 
     def _fit(self, X, y=None, groups=None, tune_params=None, **fit_params):
@@ -495,30 +497,33 @@ class TuneBaseSearchCV(BaseSearchCV):
                                  "must be the name of the scorer used to "
                                  "pick the best parameters.")
 
-        assert isinstance(
-            self.n_jobs,
-            int), ("Internal error: self.n_jobs must be an integer.")
-        if self.n_jobs < 0:
-            resources_per_trial = {"cpu": 1, "gpu": 1 if self.use_gpu else 0}
-            if self.n_jobs < -1:
-                warnings.warn(
-                    "`self.n_jobs` is automatically set "
-                    "-1 for any negative values.",
-                    category=UserWarning)
+        if self.resources_per_trial:
+            resources_per_trial = self.resources_per_trial  
         else:
-            available_cpus = multiprocessing.cpu_count()
-            gpu_fraction = 1 if self.use_gpu else 0
-            if ray.is_initialized():
-                available_cpus = ray.cluster_resources()["CPU"]
-                if self.use_gpu:
-                    available_gpus = ray.cluster_resources()["GPU"]
-                    gpu_fraction = available_gpus / self.n_jobs
-            cpu_fraction = available_cpus / self.n_jobs
-            if cpu_fraction > 1:
-                cpu_fraction = int(np.ceil(cpu_fraction))
-            if gpu_fraction > 1:
-                gpu_fraction = int(np.ceil(gpu_fraction))
-            resources_per_trial = {"cpu": cpu_fraction, "gpu": gpu_fraction}
+            assert isinstance(
+                self.n_jobs,
+                int), ("Internal error: self.n_jobs must be an integer.")
+            if self.n_jobs < 0:
+                resources_per_trial = {"cpu": 1, "gpu": 1 if self.use_gpu else 0}
+                if self.n_jobs < -1:
+                    warnings.warn(
+                        "`self.n_jobs` is automatically set "
+                        "-1 for any negative values.",
+                        category=UserWarning)
+            else:
+                available_cpus = multiprocessing.cpu_count()
+                gpu_fraction = 1 if self.use_gpu else 0
+                if ray.is_initialized():
+                    available_cpus = ray.cluster_resources()["CPU"]
+                    if self.use_gpu:
+                        available_gpus = ray.cluster_resources()["GPU"]
+                        gpu_fraction = available_gpus / self.n_jobs
+                cpu_fraction = available_cpus / self.n_jobs
+                if cpu_fraction > 1:
+                    cpu_fraction = int(np.ceil(cpu_fraction))
+                if gpu_fraction > 1:
+                    gpu_fraction = int(np.ceil(gpu_fraction))
+                resources_per_trial = {"cpu": cpu_fraction, "gpu": gpu_fraction}
 
         config = {}
         config["early_stopping"] = bool(self.early_stopping_)
